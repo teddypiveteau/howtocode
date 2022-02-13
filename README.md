@@ -1,5 +1,5 @@
 - 👋 Hi, I’m @teddypiveteau
-- 👀 I love in gamification, cloud, application performance/optimization, multiplateforme and reusability 
+- 👀 I love gamification, cloud, application performance/optimization, multiplateforme and reusability 
 - 🌱 I’m currently learning gamification, blazor, blockchain, sql server dba formation. Just a little bit too much.
 - 💞️ I’m looking to collaborate on ...
 - 📫 How to reach me ...

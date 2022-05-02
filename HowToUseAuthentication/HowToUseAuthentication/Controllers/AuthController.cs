@@ -66,7 +66,29 @@ namespace HowToUseAuthentication.Controllers
             if (!userId.HasValue)
                 return NotFound();
 
-            var token = _authManager.CreateToken(userId.Value);
+            var tokenModel = _authManager.CreateToken(userId.Value);
+            var tokenDto = new TokenInfoDto { AccessToken = tokenModel.AccessToken, RefreshToken = tokenModel.RefreshToken };
+
+            return Ok(tokenDto);
+        }
+
+        [HttpPost]
+        [Route("refresh")]
+        public async Task<IActionResult> Refresh(TokenInfoDto dto)
+        {
+            if (dto == null)
+                return BadRequest("dto is null");
+
+            var model = new TokenInfoModel
+            {
+                AccessToken = dto.AccessToken,
+                RefreshToken = dto.RefreshToken,
+            };
+
+            var token = _authManager.GetRefreshedTokenInfo(model);
+
+            if (token == null)
+                return BadRequest();
 
             return Ok(token);
         }

@@ -11,6 +11,8 @@ namespace HowToUseAuthentication.Managers
     public class MyAuthenticationManager
     {
         internal const string AdminRole = "Admin";
+        internal const int AccessTokenDurationInMinutes = 1;
+        internal const int RefreshTokenDurationInMinutes = 5;
 
         private List<UserEntity> _users = new List<UserEntity>();
         private List<TokenInfoEntity> _userTokens = new List<TokenInfoEntity>();
@@ -64,21 +66,24 @@ namespace HowToUseAuthentication.Managers
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(ClaimTypes.Name, _users.FirstOrDefault(o => o.Id == userId).UserName),
             };
-            var tokenPrivateKey = _configuration.GetSection("AppSettings:TokenPrivateKey").Value;
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(tokenPrivateKey));
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
+            var notBefore = DateTime.Now;
+            var expires = DateTime.Now.AddMinutes(AccessTokenDurationInMinutes);
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration["Jwt:TokenPrivateKey"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
-            var token = new JwtSecurityToken(claims: claims, signingCredentials: credentials, expires: DateTime.Now.AddMinutes(15));
+            var token = new JwtSecurityToken(claims: claims, signingCredentials: credentials, issuer : issuer, audience: audience, notBefore: notBefore, expires: expires);
             var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
             var refreshToken = GenerateRefreshToken();
 
-            _userTokens.Add(new TokenInfoEntity { UserId = userId, AccessToken = accessToken, RefreshToken = refreshToken, RefreshTokenExpirationDate = DateTime.Now.AddDays(1) }) ;
+            _userTokens.Add(new TokenInfoEntity { UserId = userId, AccessToken = accessToken, RefreshToken = refreshToken, RefreshTokenExpirationDate = DateTime.Now.AddMinutes(RefreshTokenDurationInMinutes) }) ;
 
             return new TokenInfoModel { AccessToken = accessToken, RefreshToken = refreshToken };
         }
 
         internal TokenInfoModel GetRefreshedTokenInfo(TokenInfoModel oldTokenInfo)
         {
-            var tokenPrivateKey = _configuration.GetSection("AppSettings:TokenPrivateKey").Value;
+            var tokenPrivateKey = _configuration["Jwt:TokenPrivateKey"];
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(tokenPrivateKey));
             var tokenValidationParameters = new TokenValidationParameters
             {
@@ -124,7 +129,8 @@ namespace HowToUseAuthentication.Managers
 
         private string GenerateRefreshToken()
         {
-            var randomNumber = new byte[32];
+            var randomNumber = new byte[64];
+
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(randomNumber);

@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HowToUseAuthentication.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -45,7 +45,7 @@ namespace HowToUseAuthentication.Controllers
 
             var isOk = _authManager.Register(model);
 
-            return isOk ? Ok() : StatusCode(StatusCodes.Status500InternalServerError, "Cannot register user");
+            return isOk ? Ok(true) : StatusCode(StatusCodes.Status500InternalServerError, "Cannot register user");
         }
 
         [HttpPost]

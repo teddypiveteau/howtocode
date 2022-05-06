@@ -21,7 +21,8 @@ namespace HowToUseAuthentication.Controllers
             _logger = logger;
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
+        [HttpGet]
+        [Route("getweatherforecast")]
         [Authorize(Roles = MyAuthenticationManager.AdminRole)]
         public IEnumerable<WeatherForecast> Get()
         {
